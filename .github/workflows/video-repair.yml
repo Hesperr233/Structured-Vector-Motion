@@ -1,0 +1,104 @@
+name: Video repair R1
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    name: Video scoring and fixture self-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "Pillow==12.3.0" "numpy==2.5.4"
+      - run: python -m unittest discover -s tests -p test_video_repair_metrics.py -v
+      - run: python -m unittest discover -s tests -p test_fixture.py -v
+
+  compatibility:
+    name: R1-001 prototype compatibility and complete decode
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: b310f57e6a21562798f5ccad2a1897ba4d99c47e
+          path: implementation
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "Pillow==12.3.0" "numpy==2.5.4" "opencv-python-headless==4.14.0.94"
+      - name: Install pinned FFmpeg build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tool-evidence
+          trap 'printf "FFmpeg setup exit: %s\n" "$?" > tool-evidence/ffmpeg-setup.log' EXIT
+          url=https://media.githubusercontent.com/media/zackees/ffmpeg_bins/df95abcb0ce6efff710dda5ef28a2f6f1dc21493/v8.0/linux.zip
+          archive="$RUNNER_TEMP/cvr-ffmpeg.zip"
+          curl --fail --silent --show-error --location --max-time 150 "$url" --output "$archive"
+          echo "ca75b05e887c7a97676632f673031875847be83daa9794298fed9cef8cac14ad  $archive" | sha256sum --check --status
+          unzip -q "$archive" -d "$RUNNER_TEMP/cvr-tools"
+          bin="$(find "$RUNNER_TEMP/cvr-tools" -type f -name ffmpeg -printf '%h\n' -quit)"
+          test -n "$bin"
+          chmod +x "$bin/ffmpeg" "$bin/ffprobe"
+          "$bin/ffmpeg" -version | sed -n '1p'
+          "$bin/ffprobe" -version | sed -n '1p'
+          echo "$bin" >> "$GITHUB_PATH"
+      - name: Run independent compatibility checks
+        run: python tests/test_video_repair_candidate.py --candidate implementation --output video-evidence
+      - name: Preserve compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-repair-r1-compatibility
+          path: |
+            tool-evidence/ffmpeg-setup.log
+            video-evidence/compatibility.json
+            video-evidence/original.mp4
+            video-evidence/repaired.mp4
+            video-evidence/comparison.mp4
+          if-no-files-found: warn
+          retention-days: 7
+
+  acceptance:
+    name: Formal video repair acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Report contract freeze blocker
+        shell: bash
+        run: |
+          mkdir -p video-gate
+          cat > video-gate/acceptance-status.json <<'JSON'
+          {
+            "status": "BLOCKED",
+            "contract": "c-video-repair-contract@0.1",
+            "revision": "R1-002-DRAFT",
+            "contract_docs_sha": "dc2cac17ddbff6cb95d21a567e7e5f87c1f62029",
+            "implementation_sha": "b310f57e6a21562798f5ccad2a1897ba4d99c47e",
+            "required": ["frozen criteria", "frozen holdout", "formal CLI", "Motion profile B"]
+          }
+          JSON
+          echo "::error::Formal video repair acceptance BLOCKED (R1-002 DRAFT)."
+          exit 1
+      - name: Preserve gate status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-repair-acceptance-status
+          path: video-gate/acceptance-status.json
+          if-no-files-found: error
+          retention-days: 7
