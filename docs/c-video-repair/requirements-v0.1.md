@@ -15,17 +15,19 @@
 | --- | --- | --- |
 | 场景标识 | `synthetic-controlled` | `svm-motion-controlled` |
 | 来源 | 受控程序合成。固定相机、一个运动目标、可验证的静态背景。 | 真实、可校验的 SVM Document。沿用受控修复域并披露离线注入的退化。 |
-| 时长 | 恰好 2 秒 | 5–10 秒，含两端 |
-| 帧率和帧数 | 恒定 `12/1` fps，24 帧，索引 `0..23` | 优先恒定 `12/1` fps，60–120 帧。由批准的时长和帧率计算。 |
-| 分辨率 | 恰好 256 × 256 | 优先 256 × 256。先按原场景宽高比等比适配并记录背景和边距。 |
+| 时长 | 恰好 2 秒 | 5–10 秒，含两端。候选演示 profile 为 8 秒。 |
+| 帧率和帧数 | 恒定 `12/1` fps，24 帧，索引 `0..23` | 恒定 `12/1` fps，60–120 帧。候选演示 profile 为 96 帧，索引 `0..95`。 |
+| 分辨率 | 恰好 256 × 256 | 候选演示 profile 为 640 × 360（16:9 等比）。先按原场景宽高比等比适配并记录背景和边距。 |
 | 无损帧 | RGB8 PNG，sRGB 样本值，无 alpha | 同左，连续、同尺寸、按展示顺序编号 |
 | 所需证据 | S1–S5 开发校准、H1–H5 冻结留出验收、无退化保护对照 | Document/Revision 来源、FINAL 且当前的 SVG 序列、光栅化证据、整段前后输出、同步对照与验收报告 |
 
 **A 的通过仅支持固定合成素材的受控结论。B 必须单独交付和验证。** 两种规格均属受控实验，不得宣称自然视频泛化。Manifest 和报告均记录 `scenario_kind`、`real_video: false` 和 `generalization_claimed: false`。
 
-B 使用 `MotionEvaluator.evaluate(tick, quality=FINAL)`，在同一身份的只读 Document 或 Revision 快照上连续采样。失败、阻塞、缺帧、stale 或低于 FINAL 的结果使源序列失败。用 `SVGRenderer` 输出每帧 SVG，由 Core 外的固定版本光栅化工具生成 RGB8 PNG。记录 Document 文件 SHA、可用的 Revision ID、SVM 代码 SHA、每帧整数 Motion tick、求值质量、SVG/PNG 摘要、画布与光栅化配置。干净生成来源证据保存在离线侧，repair 仅接收退化帧及其元数据。
+B 的候选演示 profile 为 **8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 / SVM Motion Document / FINAL 且非 stale / `SVGRenderer` / resvg `0.44.0` 固定版本**。该 profile 是 G1 提案，须经策划线书面批准后记入冻结记录；批准前不得视为正式演示规格。
 
-A 的第 `i` 帧覆盖 `[i/12, (i+1)/12)` 秒，`tick(i)=i`，最后一帧 PTS 为 `23/12`。B 使用同样的左闭右开规则，画面 PTS 从 0 开始。以 6 秒、Document Timebase 24 ticks/s、12 fps 为例，选 `[0,144)`，按 `0,2,...,142` 采样 72 帧。源 Timebase 必须与选定采样率精确兼容，禁止隐式舍入、丢帧或补帧。若选用既有 960 × 540 的 16:9 Motion 示例，256 × 256 画布内可先试 256 × 144 等比成像。若边缘或掩膜在缩放后难以辨认，向策划线提交等比偶数尺寸方案（如 320 × 180）、SVM Timebase 与 fps 的整数映射和对应帧数，批准后记录到演示 profile。A 规格保持固定。
+B 使用 `MotionEvaluator.evaluate(tick, quality=FINAL)`，在同一身份的只读 Document 或 Revision 快照上连续采样。失败、阻塞、缺帧、stale 或低于 FINAL 的结果使源序列失败。用 `SVGRenderer` 输出每帧 SVG，由 Core 外的固定版本光栅化工具 resvg `0.44.0` 生成 RGB8 PNG。记录 Document 文件 SHA、可用的 Revision ID、SVM 代码 SHA、每帧整数 Motion tick、求值质量、SVG/PNG 摘要、画布与光栅化配置。干净生成来源证据保存在离线侧，repair 仅接收退化帧及其元数据。
+
+A 的第 `i` 帧覆盖 `[i/12, (i+1)/12)` 秒，`tick(i)=i`，最后一帧 PTS 为 `23/12`。B 使用同样的左闭右开规则，画面 PTS 从 0 开始。候选演示 profile 以 8 秒、Document Timebase 24 ticks/s、12 fps 为例，选 `[0,192)`，按 `0,2,...,190` 采样 96 帧。源 Timebase 必须与选定采样率精确兼容，禁止隐式舍入、丢帧或补帧。候选分辨率为 640 × 360，可由既有 960 × 540 的 16:9 Motion 示例等比缩放得到。若边缘或掩膜在缩放后难以辨认，向策划线提交等比偶数尺寸方案、SVM Timebase 与 fps 的整数映射和对应帧数，批准后记录到演示 profile。A 规格保持固定。
 
 ## 2. 功能范围
 
