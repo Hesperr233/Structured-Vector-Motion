@@ -1,0 +1,38 @@
+name: Pinned video tools
+description: Install checksum-verified Linux FFmpeg/ffprobe and optional resvg
+inputs:
+  resvg:
+    description: Include resvg 0.44.0
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Install pinned tools
+      shell: bash
+      env:
+        INSTALL_RESVG: ${{ inputs.resvg }}
+      run: |
+        set -euo pipefail
+        mkdir -p tool-evidence
+        trap 'printf "Video tool setup exit: %s\n" "$?" >> tool-evidence/setup.log' EXIT
+        ffmpeg_archive="$RUNNER_TEMP/cvr-ffmpeg.zip"
+        ffmpeg_url=https://media.githubusercontent.com/media/zackees/ffmpeg_bins/df95abcb0ce6efff710dda5ef28a2f6f1dc21493/v8.0/linux.zip
+        curl --fail --silent --show-error --location --max-time 150 "$ffmpeg_url" --output "$ffmpeg_archive"
+        echo "ca75b05e887c7a97676632f673031875847be83daa9794298fed9cef8cac14ad  $ffmpeg_archive" | sha256sum --check --status
+        unzip -q "$ffmpeg_archive" -d "$RUNNER_TEMP/cvr-ffmpeg"
+        bin="$RUNNER_TEMP/cvr-ffmpeg/linux"
+        chmod +x "$bin/ffmpeg" "$bin/ffprobe"
+        "$bin/ffmpeg" -version | sed -n '1p' | tee -a tool-evidence/setup.log
+        "$bin/ffprobe" -version | sed -n '1p' | tee -a tool-evidence/setup.log
+        echo "$bin" >> "$GITHUB_PATH"
+        if [[ "$INSTALL_RESVG" == true ]]; then
+          resvg_archive="$RUNNER_TEMP/cvr-resvg.tar.gz"
+          resvg_url=https://github.com/linebender/resvg/releases/download/v0.44.0/resvg-linux-x86_64.tar.gz
+          curl --fail --silent --show-error --location --max-time 150 "$resvg_url" --output "$resvg_archive"
+          echo "450cfeaf8122f7389a8acf698888804e1ed46980b611d5253204049c51c87087  $resvg_archive" | sha256sum --check --status
+          mkdir "$RUNNER_TEMP/cvr-resvg"
+          tar -xzf "$resvg_archive" -C "$RUNNER_TEMP/cvr-resvg" resvg
+          chmod +x "$RUNNER_TEMP/cvr-resvg/resvg"
+          "$RUNNER_TEMP/cvr-resvg/resvg" --version | tee -a tool-evidence/setup.log
+          echo "$RUNNER_TEMP/cvr-resvg" >> "$GITHUB_PATH"
+        fi

@@ -15,8 +15,9 @@ import numpy as np
 from PIL import Image
 from test_video_repair_metrics import scores
 
-SHA = "b310f57e6a21562798f5ccad2a1897ba4d99c47e"
+SHA = "a8f211bea533c2101200db620fe6d8ee47b4ecf8"
 CONTRACT = "c-video-repair-contract@0.1/R1-002-DRAFT"
+CONTRACT_DOCS_SHA = "52180bd1e71b3b23b2e7cbbe2e236b05f944f2a3"
 PROFILE = "svm-c-r1-restoration@1"
 SIZE = 256
 COUNT = 24
@@ -159,7 +160,10 @@ def compatibility(candidate, output, ffmpeg, ffprobe):
     report = {
         "implementation_sha": SHA,
         "contract": CONTRACT,
-        "contract_docs_sha": "dc2cac17ddbff6cb95d21a567e7e5f87c1f62029",
+        "contract_docs_sha": CONTRACT_DOCS_SHA,
+        "ci_sha": tool_output("git", Path(__file__).resolve().parent, "rev-parse", "HEAD")
+        .decode()
+        .strip(),
         "profile": PROFILE,
         "gate": "BLOCKED",
         "gate_reason": "Contract is DRAFT. Compatibility tests use development inputs only.",
@@ -377,7 +381,10 @@ if __name__ == "__main__":
         result = {
             "implementation_sha": SHA,
             "contract": CONTRACT,
-            "contract_docs_sha": "dc2cac17ddbff6cb95d21a567e7e5f87c1f62029",
+            "contract_docs_sha": CONTRACT_DOCS_SHA,
+            "ci_sha": tool_output("git", Path(__file__).resolve().parent, "rev-parse", "HEAD")
+            .decode()
+            .strip(),
             "gate": "BLOCKED",
             "checks": {"setup": {"status": "FAIL", "diagnostic": type(error).__name__}},
         }
