@@ -85,7 +85,7 @@ python -m prototype.video_restoration.motion repair --run $run --ffmpeg ffmpeg -
 python -m prototype.video_restoration.motion evaluate --run $run
 ```
 
-或一次跑完并执行验收断言：
+也可一次跑完开发自检。存在未解析像素时，Motion 修复和自检均退出 5：
 
 ```powershell
 python -m prototype.video_restoration.motion selfcheck --run $run --resvg resvg.exe
@@ -112,7 +112,23 @@ python -m prototype.video_restoration.motion selfcheck --run $run --resvg resvg.
 
 ## 契约状态
 
-`c-video-repair-contract@0.1`（草案修订 `R1-002`）仍为 **DRAFT**；`main` 尚无 `docs/c-video-repair/`，G1 未通过。因此正式 `ingest`/`repair`/`export`/`evaluate`/`verify` 子命令与规范命名迁移 **未实现、未运行**，本轮不声称满足该契约。旧 `synthetic`/`demo`/`evaluate` 入口保持兼容；参数化改动已用 2 秒固定样例回归，共享指标、无损帧与三支 MP4 均与旧结果逐字节一致。
+实践候选采用 `e3d9e70` 中的 `c-video-repair-contract@0.1`、修订 `R1-002`。策划分派与四份契约标为 **DRAFT**。候选调用与原型调用使用各自的目录。A 为 2 秒合成开发素材，B 在原 8 秒 Document 的 96 个 FINAL tick 上构造一套显式局部光度和拖影刺激。原始 B 的全帧闪烁、全片供体与历史证据仍可通过原型复查。
+
+以下命令写入新目录。在仓库根目录运行，`resvg` 采用 0.44.0，FFmpeg 和 ffprobe 采用同一 9.0.2 构建。
+
+```powershell
+$base = 'build/g2-example/B'
+$run = "$base/run"
+$candidate = git rev-parse HEAD
+python -m prototype.video_restoration.formal_fixture --sample B --output "$base/fixture" --resvg resvg
+python -m prototype.video_restoration ingest --source "$base/fixture/source" --output "$base/input"
+python -m prototype.video_restoration repair --input "$base/input" --masks "$base/fixture/masks" --config "$base/fixture/config.json" --output $run
+python -m prototype.video_restoration export --run $run --encoder ffmpeg --ffprobe ffprobe --diagnostic
+python -m prototype.video_restoration evaluate --run $run --reference "$base/fixture/reference" --output "$run/metrics.json" --diagnostic
+python -m prototype.video_restoration verify --run $run --reference "$base/fixture/reference" --contract c-video-repair-contract@0.1 --expected-code-sha $candidate --output "$run/acceptance-report.json" --diagnostic
+```
+
+A 使用另一个新目录并传 `--sample A`。运行依次封存输入、前后无损帧、三路 MP4 与解码记录、离线指标和核验报告。每轮 repair 仅接收退化帧、授权/可靠性掩膜与配置，按过去窗口重新估计供体。首帧无法取得两次过去观测。未解决像素保留退化输入 RGB，阶段清单为 `PARTIAL`，退出 5。已验证的媒体单独记录。数值门槛或工具失败分别退出 7 或 6。`--diagnostic` 可为不完整运行保留后续检查结果。运行清单的阶段退出码、单帧捐献支持与未解析计数以及报告的 `missing_checks` 供 CI 与审查线复核。缺少 G1 冻结与独立验收时，verify 返回非零。
 
 ## 已知局限
 

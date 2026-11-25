@@ -455,6 +455,7 @@ def source(
         }
         manifest["elapsed_seconds"] = round(time.perf_counter() - started, 3)
         write_json(staging / "source-manifest.json", manifest)
+        write_json(staging / "repair-input.json", {"inputs": input_records, "masks": mask_records})
         staging.rename(run)
 
     log.append(f"source: {spec.FRAME_COUNT} frames at {spec.FPS} fps")
@@ -466,7 +467,8 @@ def source(
 def repair_run(run: Path, *, ffmpeg: str, ffprobe: str, log: list[str]) -> int:
     """Repair and export. This stage never reads ``evaluation/``."""
     started = time.perf_counter()
-    source_manifest = json.loads((run / "source-manifest.json").read_text(encoding="utf-8"))
+    public_manifest = run / "repair-input.json"
+    source_manifest = json.loads(public_manifest.read_bytes())
     frames, input_records = load_sequence(
         run / "input", width=spec.WIDTH, height=spec.HEIGHT, names=FRAME_NAMES
     )
@@ -490,7 +492,7 @@ def repair_run(run: Path, *, ffmpeg: str, ffprobe: str, log: list[str]) -> int:
         refused = report["ghost"]["refused_pixels"] + report["defect"]["refused_pixels"]
         changed_pixels = int(np.count_nonzero(changed[index]))
         unresolved = refused
-        status = "REPAIRED" if changed_pixels else ("UNRESOLVED" if unresolved else "UNCHANGED")
+        status = "UNRESOLVED" if unresolved else ("REPAIRED" if changed_pixels else "UNCHANGED")
         frame_status.append(
             {
                 "index": index,
@@ -522,8 +524,7 @@ def repair_run(run: Path, *, ffmpeg: str, ffprobe: str, log: list[str]) -> int:
         "status": "in_progress",
         "scope": "authored SVM Motion ground truth, controlled video repair",
         "clean_reference_used_by_repair": False,
-        "document_sha256": source_manifest["document_sha256"],
-        "source_manifest_sha256": digest((run / "source-manifest.json").read_bytes()),
+        "repair_input_manifest_sha256": digest(public_manifest.read_bytes()),
         "width": spec.WIDTH,
         "height": spec.HEIGHT,
         "frame_count": spec.FRAME_COUNT,
@@ -578,6 +579,9 @@ def repair_run(run: Path, *, ffmpeg: str, ffprobe: str, log: list[str]) -> int:
         if code
         else ("partial" if manifest["repair_status"] == "contains_refusals" else "verified")
     )
+    if manifest["status"] == "partial":
+        code = 5
+    manifest["acceptance_status"] = "NOT_RUN"
     manifest["exit_code"] = code
     manifest["elapsed_seconds"] = round(time.perf_counter() - started, 3)
     write_json(run / "run-manifest.json", manifest)
@@ -663,7 +667,8 @@ def selfcheck(run: Path, *, resvg: str, ffmpeg: str, ffprobe: str) -> int:
     if run.exists():
         raise ValueError(f"run directory already exists: {run}")
     source(run, document_path=None, resvg=resvg, log=log)
-    if repair_run(run, ffmpeg=ffmpeg, ffprobe=ffprobe, log=log):
+    repair_code = repair_run(run, ffmpeg=ffmpeg, ffprobe=ffprobe, log=log)
+    if repair_code not in (0, 5):
         raise ValueError("repair stage failed")
     evaluate_run(run, log=log)
     metrics = json.loads((run / "metrics.json").read_text(encoding="utf-8"))
@@ -694,13 +699,13 @@ def selfcheck(run: Path, *, resvg: str, ffmpeg: str, ffprobe: str) -> int:
         ),
     }
     for name, passed in checks.items():
-        print(f"{'PASS' if passed else 'FAIL'} {name}")
+        print(f"{'observed' if passed else 'failed'} {name}")
     if not all(checks.values()):
         raise ValueError("R1-002 self-check failed")
-    print("PASS r1-002 motion integration")
+    print(f"development selfcheck complete; repair_exit={repair_code}; acceptance=NOT_RUN")
     for line in log:
         print(line)
-    return 0
+    return repair_code
 
 
 def main() -> int:
