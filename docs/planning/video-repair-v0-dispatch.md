@@ -13,7 +13,7 @@
 
 ## 范围与契约来源
 
-[需求](../c-video-repair/requirements-v0.1.md)定义 A 固定 CI 合成素材（2 秒、24 帧、12/1 fps、256 × 256 RGB8 PNG）与 B 正式 SVM Motion 演示（真实 Document、5–10 秒、`MotionEvaluator`、FINAL 且当前、`SVGRenderer`、外部光栅化的连续 RGB8 帧）。两个里程碑分别提供证据。B 优先 12 fps、256 × 256，源场景需要其他规格时评审等比画布和整数采样方案。目标包括局部修复、闪烁抑制、拖影改善、外观稳定，以及视频导出和同步前后比较。
+[需求](../c-video-repair/requirements-v0.1.md)定义 A 固定 CI 合成素材（2 秒、24 帧、12/1 fps、256 × 256 RGB8 PNG）与 B 正式 SVM Motion 演示（真实 Document、候选 8 秒 / 96 帧 / 12 fps / 640 × 360 RGB8、`MotionEvaluator`、FINAL 且非 stale、`SVGRenderer`、resvg `0.44.0` 外部光栅化的连续 RGB8 帧）。两个里程碑分别提供证据。B 候选 profile 为 G1 提案，须经策划批准；源场景需要其他规格时评审等比画布和整数采样方案。目标包括局部修复、闪烁抑制、拖影改善、外观稳定，以及视频导出和同步前后比较。
 
 [管线契约](../c-video-repair/pipeline-contract-v0.1.md)统一 CLI、输入、掩膜、输出与状态。[验收标准](../c-video-repair/acceptance-criteria-v0.1.md)是公式、阈值与测试口径的单一来源。[接入边界](../c-video-repair/integration-boundary.md)定义外部处理与 SVM 的权限边界。契约只维护在 `docs/c-video-repair/`。实践原型源见 [b310f57 的 prototype/video_restoration](https://github.com/Hesperr233/Structured-Vector-Motion/tree/b310f57e6a21562798f5ccad2a1897ba4d99c47e/prototype/video_restoration)。
 
@@ -40,7 +40,7 @@
 
 1. 在 Core 外实现 `ingest → repair → export`，接通 `evaluate`、`verify` 的外部入口和版本校验。独立 oracle、正式评分与 verify 验收逻辑由 CI 线维护。现有 `synthetic`、`demo` 和原型 `evaluate` 保留兼容行为，正式接口使用新的文件格式和输出目录。
 2. 保留可追回的原始源及退化快照。repair 仅接收退化 PNG、帧时间、显式掩膜和配置。公开掩膜的来源、写入授权、供体可靠性及保护域。可靠邻帧不足须原样保留并标 `UNRESOLVED`。
-3. 交付 A 开发样例及 B Motion 演示来源配置。B 记录 Document/Revision、逐帧 tick、FINAL 当前状态、SVG/PNG 哈希及固定光栅化工具。干净参考和退化真值交离线评测侧。
+3. 交付 A 开发样例及 B Motion 演示来源配置。B 记录 Document/Revision、逐帧 tick、FINAL 当前状态、SVG/PNG 哈希及固定光栅化工具 resvg `0.44.0`。干净参考和退化真值交离线评测侧。
 4. 分阶段提交状态和摘要。交付 `before.mp4`、`after.mp4`、`comparison.mp4`、前后无损 PNG、`run-manifest.json` 和复现命令。将实际依赖、实施 SHA、工具版本和未完成项交 CI；不能将原型 `partial` 或媒体 `verified` 写成验收通过。
 
 ## CI 线测试交接单
@@ -57,11 +57,29 @@
 
 | 议题 | 草案决定或待验证 |
 | --- | --- |
-| 演示来源 | 选择确切的 Document/Revision、连续 tick、画布与外部光栅化工具。对 256 方形缩放做边缘/掩膜可见性检查，必要时提交等比方案。 |
+| 演示来源 | 选择确切的 Document/Revision 和连续 tick。候选画布 640 × 360、光栅化 resvg `0.44.0`，仍需策划批准；对候选画布做边缘/掩膜可见性检查，必要时提交等比方案。 |
 | S4/H4 和合成掩膜 | 先在开发集验证漂移可由许可静态样本观测、固定 G 不与目标轨迹重合、供体语义可独立构造。冻结留出 manifest 与保真检查规则。 |
-| 工具与媒体 | 确定跨平台 PNG 测试环境、至少一个固定 FFmpeg/libx264/ffprobe 组合、sRGB 色彩往返与逐帧 MAE/PSNR 试验结果、原片快照位置与保存周期。 |
+| 工具与媒体 | 确定跨平台 PNG 测试环境、至少一个固定 FFmpeg/libx264/ffprobe 组合、固定 resvg `0.44.0`、sRGB 色彩往返与逐帧 MAE/PSNR 试验结果、原片快照位置与保存周期。 |
 | 兼容期 | 确定保留原型调用方的期限以及显式迁移工具的归属。 |
 | 冻结记录 | 策划线确认公式修订、现有 30% 单项和 20% 组合及空间、运动、媒体门槛。开始留出后禁止下调阈值或重选区域。 |
+
+## G1 冻结记录（提案）
+
+以下为 G1 冻结提案，全部保持 DRAFT，策划线书面批准后方可转为 FROZEN 并逐项填为最终值。
+
+| 字段 | 提案值 |
+| --- | --- |
+| 契约版本 | `c-video-repair-contract@0.1` |
+| 文档 SHA | 本提交后四份契约与策划分派的 git 提交 SHA（提交后回填） |
+| A Profile | 2 秒 / 24 帧 / 12/1 fps / 256 × 256 RGB8 PNG |
+| B Profile | 候选 8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 PNG / SVM Motion Document / FINAL 非 stale / `SVGRenderer` / resvg `0.44.0` |
+| 指标公式 | M1–M4、Q1–Q10、T1–T7、X1–X15 的公式 ID（`cvr-metric-*@0.1-r1.002`）与定义见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
+| 阈值 | 单项改善 ≥ 30%、组合 ≥ 20%；Q/T/X/V 各护栏门槛见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
+| 留出数据 SHA | H1–H5 的 seed、输入/参考/评分掩膜 SHA（正式留出开始前封存，待 CI 线登记） |
+| 工具版本 | resvg `0.44.0`、FFmpeg/libx264、ffprobe（固定组合待试验后登记） |
+| 策划批准 | 待策划线书面批准 |
+
+未决项：留出数据 SHA、固定 FFmpeg/libx264/ffprobe 版本、B 确切 Document/Revision 与连续 tick。这些在 G1 批准时一并登记，未登记前不得开始正式留出验收或宣称冻结。
 
 ## 仓库卫生与旧日志
 
