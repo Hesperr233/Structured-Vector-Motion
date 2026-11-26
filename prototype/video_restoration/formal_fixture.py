@@ -17,7 +17,10 @@ from . import formal_bundle as bundle
 from . import motion, motion_scene, synthetic
 from .sequence import digest, write_json
 
-STIMULUS = "cvr-controlled-development-stimulus@1"
+# A uses a half-intensity echo to exercise the minimum M3 degradation in a
+# short clip. Retain the previously demonstrated B stimulus.
+STIMULUS_VERSION = {"A": 2, "B": 1}
+ECHO_BLEND = {"A": (1, 2), "B": (2, 5)}
 # Authored before repair or scoring. All coordinates are half-open.
 AREAS = {
     "A": {
@@ -168,6 +171,7 @@ def _build(stage: Path, scratch: Path, sample: str, clip: str, resvg: str) -> No
     count, height, width = contours.shape
     design = AREAS[sample]
     required = REQUIRED[clip]
+    echo_weight, blend_total = ECHO_BLEND[sample]
     photo, static, background, patch, zone, donor_strip = (
         bundle.rectangle(design[key], width, height)
         for key in ("photo", "sample", "B", "ghost_patch", "G", "donor_ghost")
@@ -208,7 +212,8 @@ def _build(stage: Path, scratch: Path, sample: str, clip: str, resvg: str) -> No
             ys, xs = np.nonzero(hit)
             current = clean[i, ys, xs].astype(np.int16)
             echo = clean[i - 1, ys - 4, xs].astype(np.int16)
-            degraded[i, ys, xs] = (3 * current + 2 * echo + 2) // 5
+            weighted = (blend_total - echo_weight) * current + echo_weight * echo
+            degraded[i, ys, xs] = (weighted + blend_total // 2) // blend_total
         # Independent slowly varying chromatic and alternating common-mode terms.
         # First frame is the unperturbed observation available to the causal estimator.
         phase = i % 16
@@ -227,7 +232,8 @@ def _build(stage: Path, scratch: Path, sample: str, clip: str, resvg: str) -> No
     repair = defect | ghost
     donor = donor_area & ~repair
     scenario = provenance["kind"]
-    profile = f"cvr-development-{sample.lower()}@1"
+    version = STIMULUS_VERSION[sample]
+    profile = f"cvr-development-{sample.lower()}@{version}"
     video = bundle.make_video(stage / "source", degraded, scenario, clip, profile)
     bundle.make_masks(
         stage / "masks",
@@ -261,11 +267,11 @@ def _build(stage: Path, scratch: Path, sample: str, clip: str, resvg: str) -> No
         "required_metrics": required,
         "source_evidence": _asset(reference, source_info),
         "stimulus": {
-            "id": STIMULUS,
+            "id": f"cvr-controlled-development-stimulus@{version}",
             "areas": design,
             "photometric_offsets_rgb": offsets,
             "echo_displacement_xy": [0, 4],
-            "echo_blend": "2/5",
+            "echo_blend": f"{echo_weight}/{blend_total}",
             "local_defect": "preserved basis defect minus basis frame-wide flicker",
             "scope": "development; no frozen holdout or segmentation rule",
         },

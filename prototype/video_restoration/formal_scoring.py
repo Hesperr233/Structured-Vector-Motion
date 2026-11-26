@@ -1,4 +1,4 @@
-"""Offline development scoring of sealed RGB8 frames against R1-002 formulas.
+"""Offline scoring of sealed RGB8 frames against R1-002 formulas.
 
 This implementation is a practice-line diagnostic. Formal acceptance requires the
 independent CI oracle, frozen holdouts/regions, and an approved output segmentation rule.
@@ -382,7 +382,7 @@ def _guards(before, after, masks, mask_manifest, config, video, manifest) -> dic
 def score(
     run: Path, reference: Path, manifest: dict, before: np.ndarray, after: np.ndarray
 ) -> dict:
-    """Calculate development diagnostics, rechecking the reference binding before use."""
+    """Calculate diagnostics, rechecking the reference binding before use."""
     bundle.require(
         not (
             reference.resolve().is_relative_to(run.resolve())
@@ -395,9 +395,25 @@ def score(
     path = reference / "reference-manifest.json"
     offline = bundle.json_file(path)
     bundle.version(offline)
+    clip = offline["clip_id"]
+    holdout = clip in ("H1", "H2", "H3", "H4", "H5")
+    if holdout:
+        reference_format = "cvr-holdout-reference@1"
+        qualification = "SEALED_HOLDOUT"
+        profile = "cvr-holdout-a@1"
+        scenario = "synthetic-controlled"
+        metric_case = "S" + clip[1:]
+    else:
+        reference_format = "cvr-development-reference@1"
+        qualification = "DRAFT_DEVELOPMENT_ONLY"
+        profile = video["profile_id"]
+        scenario = video["scenario_kind"]
+        metric_case = clip
     bundle.require(
-        offline.get("reference_format") == "cvr-development-reference@1"
-        and offline.get("qualification") == "DRAFT_DEVELOPMENT_ONLY",
+        offline.get("reference_format") == reference_format
+        and offline.get("qualification") == qualification
+        and offline.get("profile_id") == profile
+        and offline.get("scenario_kind") == scenario,
         1,
         "unsupported reference role",
     )
@@ -414,13 +430,12 @@ def score(
         bundle.require(offline[key] == video[key], 13, "reference does not belong to this input")
     for key in ("bundle_digest", "config_sha256", "mask_manifest_sha256"):
         bundle.require(offline[key] == manifest[key], 13, "reference/run binding mismatch")
-    clip = offline["clip_id"]
     bundle.require(
-        clip in REQUIRED and set(offline["required_metrics"]) == REQUIRED[clip],
+        metric_case in REQUIRED and set(offline["required_metrics"]) == REQUIRED[metric_case],
         13,
-        "unknown or inconsistent development scoring profile",
+        "unknown or inconsistent scoring profile",
     )
-    required = REQUIRED[clip]
+    required = REQUIRED[metric_case]
     bundle.require(
         before.shape == after.shape == (video["frame_count"], video["height"], video["width"], 3)
         and before.dtype == after.dtype == np.uint8,
@@ -475,7 +490,7 @@ def score(
             },
             "Ee(out)/Ee(in) >= 0.90; bbox encloses declared reference foreground",
         )
-        factor = 0.9 if clip == "S4" else 1.05
+        factor = 0.9 if metric_case == "S4" else 1.05
         s_in, s_out = a["spatial"], b["spatial"]
         guards["Q6"] = _check(
             s_in is not None and s_out is not None and s_out <= factor * s_in,
@@ -519,7 +534,7 @@ def score(
         "scoring_region_sha256": hashes,
         "reference_clean_sha256": bundle.hashed(offline["clean"]) if "clean" in offline else None,
         "source_evidence": source,
-        "scoring_profile": "DRAFT_DEVELOPMENT_ONLY",
+        "scoring_profile": qualification,
         "metrics": rows,
         "guardrails": guards,
         "quality_failures": failures,
