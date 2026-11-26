@@ -70,16 +70,28 @@
 | 字段 | 提案值 |
 | --- | --- |
 | 契约版本 | `c-video-repair-contract@0.1` |
-| 文档 SHA | 本提交后四份契约与策划分派的 git 提交 SHA（提交后回填） |
+| 文档 SHA | 契约文本基于 `a1bd11519a2c3a58e5394ac729c42502c30c0050`，批准时另登记实际生效的文档提交。 |
 | A Profile | 2 秒 / 24 帧 / 12/1 fps / 256 × 256 RGB8 PNG |
-| B Profile | 候选 8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 PNG / SVM Motion Document / FINAL 非 stale / `SVGRenderer` / resvg `0.44.0` |
+| B Profile | 候选 8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 PNG / FINAL 非 stale / `SVGRenderer` / resvg `0.44.0`。独立只读 Document 的文件 SHA 与 12 ticks/s 下的连续 tick 0–95 见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 | 指标公式 | M1–M4、Q1–Q10、T1–T7、X1–X15 的公式 ID（`cvr-metric-*@0.1-r1.002`）与定义见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
 | 阈值 | 单项改善 ≥ 30%、组合 ≥ 20%；Q/T/X/V 各护栏门槛见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
-| 留出数据 SHA | H1–H5 的 seed、输入/参考/评分掩膜 SHA（正式留出开始前封存，待 CI 线登记） |
-| 工具版本 | resvg `0.44.0`、FFmpeg/libx264、ffprobe（固定组合待试验后登记） |
+| 留出数据 SHA | [H1–H5 封存清单](../c-video-repair/g1-holdout-seal.json)记录独立生成器、seed、输入、写入授权、配置、参考和评分掩膜的 SHA。 |
+| 工具版本 | Ubuntu 正式候选工具和 Windows 开发校准环境分别登记在 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 | 策划批准 | 待策划线书面批准 |
 
-未决项：留出数据 SHA、固定 FFmpeg/libx264/ffprobe 版本、B 确切 Document/Revision 与连续 tick。这些在 G1 批准时一并登记，未登记前不得开始正式留出验收或宣称冻结。
+留出包可独立重建。在文档检出中使用含 NumPy 的 Python 运行下列命令。输出目录必须是新目录。生成器在发布目录前核对封存 SHA。每例的 `source/`、`masks/` 和 `config.json` 为修复输入。`reference/` 仅供离线评分。
+
+```powershell
+python tools/video_repair_r1_holdout.py build --output build/r1-002-holdouts --seal docs/c-video-repair/g1-holdout-seal.json
+```
+
+封存前仅核对输入下界、参考轮廓分割和包的读回，未运行任何 H 场景的修复。B 开发样例的候选轮廓规则 `cvr-b-authored-palette@1` 根据已知场景配色分别分割每帧修复 RGB，实测最小 IoU 为 0.99867，最大质心误差为 0.110 px。
+
+`g1-freeze.json` 当前记录 `DRAFT` 与空批准字段。G1 待策划线核对工具与开发证据后明示批准。通过后，`approval` 记录 `approved_by`、带时区的 `approved_at`、`decision` 为 `APPROVE_G1`、`holdout_seal_sha256` 及 `policy_sha256`，状态方可登记为 `FROZEN`。`policy_sha256` 是记录去掉 `state` 与 `approval` 后的规范 JSON 摘要，覆盖全部契约文件摘要、留出清单、B 来源与媒体工具。正式留出验收使用该冻结记录和所指向的封存清单。
+
+B 的评分区域摘要覆盖所有角色。每个角色记录掩膜的时序类型和按帧顺序排列的像素摘要。摘要使用规范 JSON，独立 CI 从实际评分的掩膜重算，以便更换实现 SHA 时仍可核对同一套评分区域。
+
+A 组合开发样例采用可测量的拖影强度后，原 CRF 16 在独立解码中最低为 39.972 dB。CRF 12 的同源逐帧重跑最低为 40.321 dB。提案采用 CRF 12，保留逐帧 MAE 与 PSNR 门槛，并登记解码换算方式。
 
 ## 仓库卫生与旧日志
 

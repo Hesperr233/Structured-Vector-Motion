@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "state": "DRAFT",
+  "approval": null,
+  "contract_version": "c-video-repair-contract@0.1",
+  "draft_revision": "R1-002",
+  "contract_source_commit": "a1bd11519a2c3a58e5394ac729c42502c30c0050",
+  "holdout_seal": {
+    "path": "docs/c-video-repair/g1-holdout-seal.json",
+    "sha256": "sha256:3c3d6e7f4b0bbfa431e3c0c9c8beea631ac601a9358694fd9e8dcc39569911f0"
+  },
+  "motion": {
+    "document_id": "document:video-repair-motion-ground-truth",
+    "document_path": "prototype/video_restoration/evidence/r1-002/document.svm.json",
+    "document_sha256": "sha256:8f22b6a806194b89b9f01849db79b2889dfa8e8642f3baa28eaae7f6dd30a004",
+    "snapshot_kind": "read-only standalone Document",
+    "revision_id": null,
+    "first_tick": 0,
+    "last_tick": 95,
+    "ticks_per_second": 12,
+    "width": 640,
+    "height": 360,
+    "quality": "FINAL",
+    "stale_frames": 0,
+    "input_bundle_digest": "sha256:15cbc982d33e7dfb55873d03f38e98fb52b2c61f53df8bf92017379a0504bb40",
+    "mask_manifest_sha256": "sha256:d6944c1b7e26a56703e9c43f63d3a4ec8353179217eca69cbf52e109572d12de",
+    "config_sha256": "sha256:976bfc7443247bd2de10982a248776f8ff258747ae50ae01dc6bb3aa0c39c5ab",
+    "scoring_regions_sha256": "sha256:9e4b50f9fa3e3b05f80375524e250d5bdab89ca42a9ada0043594341de5695c9",
+    "segmentation": {
+      "kind": "cvr-b-authored-palette@1"
+    }
+  },
+  "tools": {
+    "linux": {
+      "platform": "ubuntu-24.04",
+      "ffmpeg_version": "n8.0.1-48-g0592be14ff-20260116",
+      "ffprobe_version": "n8.0.1-48-g0592be14ff-20260116",
+      "libx264_core": 165,
+      "ffmpeg_ffprobe_archive_sha256": "sha256:ca75b05e887c7a97676632f673031875847be83daa9794298fed9cef8cac14ad",
+      "resvg_version": "0.44.0",
+      "resvg_archive_sha256": "sha256:450cfeaf8122f7389a8acf698888804e1ed46980b611d5253204049c51c87087"
+    },
+    "local_calibration": {
+      "platform": "Windows",
+      "ffmpeg_version": "9.0.2-essentials_build-www.gyan.dev",
+      "ffprobe_version": "9.0.2-essentials_build-www.gyan.dev",
+      "libx264_build": "core 165 r3223 0480cb0",
+      "ffmpeg_sha256": "sha256:3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+      "ffprobe_sha256": "sha256:f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52",
+      "resvg_version": "0.44.0",
+      "resvg_sha256": "sha256:4aa76a1b7b0d348c8e9f8573f1c107a9392375740eea083e9d5434a49bae2a58"
+    }
+  },
+  "contract_documents": {
+    "docs/c-video-repair/acceptance-criteria-v0.1.md": "sha256:d3cba76517f01924eb72ce76c6702a3264b6524dfe6a8b35b905cb343453a6e7",
+    "docs/c-video-repair/integration-boundary.md": "sha256:a10394ce97cbc858d600b38f6120f705fb7a6e611ba0ab3fbc0693415a1e2254",
+    "docs/c-video-repair/pipeline-contract-v0.1.md": "sha256:aedb34b569281fb26229b1a2c28f496610019b76b061e537bf5ffadfe9e9c0c2",
+    "docs/c-video-repair/requirements-v0.1.md": "sha256:a818c2078f1bf9d888e7a02f1870fa938c78a30b22870240dc9925d91530fa96"
+  },
+  "media": {
+    "encoder": "libx264",
+    "preset": "medium",
+    "crf": 12,
+    "gop": 12,
+    "independent_decode_filter": "scale=in_color_matrix=bt709:in_range=tv:out_range=full,format=rgb24"
+  }
+}

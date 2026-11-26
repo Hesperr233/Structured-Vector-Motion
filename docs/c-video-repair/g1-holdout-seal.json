@@ -1,0 +1,77 @@
+{
+  "cases": {
+    "H1": {
+      "authorization_sha256": "sha256:6421e96868fdaef97929ef870232fdaf488f06e91833a1945f8db6d26257bcda",
+      "config_sha256": "sha256:9de6f4373caa0cc9d3445a837dca8393ec91b4a0050c3e3e452efd74e72f16d7",
+      "input_bundle_digest": "sha256:808b4273eebf89e66965647ec6c1ed6d6b55a0d252cac915b498de206bf585ed",
+      "input_sha256": "sha256:f5e8ccd07d3698763d8e30a7a60180f1fdc5496a0fed524e16d7c3a8e0ad6da4",
+      "reference_manifest_sha256": "sha256:80a73533f0aee7e3590d5c8208052219bef99986fa9c60961ec4a7965342da6d",
+      "reference_sha256": "sha256:61cc065969e1c3b2f73ea0f067105244186e7b20848873d790e2c5c63ca0b2de",
+      "required_metrics": [
+        "M1"
+      ],
+      "scoring_masks_sha256": "sha256:2d6c4a0e14bce544a8174c550dae8cf530cf8f6c09c4b00c89f25159ec783448",
+      "seed": 419281
+    },
+    "H2": {
+      "authorization_sha256": "sha256:7331a4c947ed585e8a4007ad508035a3ce92f8c18d51ebedfbdce8f125277b54",
+      "config_sha256": "sha256:685c2391c31cd6f0a0a52bb0c278e6f7dd548d1621c8d587ddb8fa33e6379864",
+      "input_bundle_digest": "sha256:2c8b89012fc6fbe4e99140ee297125f373462afb64d2dba8a8227c8e780afb57",
+      "input_sha256": "sha256:1c4ba19a035b5180407ea725180bfbac59278c811df4d7c11ea8a5be31deadb1",
+      "reference_manifest_sha256": "sha256:db79820577952466017dbff3a0748422437b59a8af812a46dbaf112ca2ea0fe5",
+      "reference_sha256": "sha256:e63ddde5a2aa522a88768aefe8d9d15d85f55af999a2d4ff398225353ca944be",
+      "required_metrics": [
+        "M2"
+      ],
+      "scoring_masks_sha256": "sha256:47519e92f48f647788813b49fded392d3b3f8ef2efc0007e6cfe6960a08d1d41",
+      "seed": 913763
+    },
+    "H3": {
+      "authorization_sha256": "sha256:0fe7108ea731cd3e9d141edfb8a64acb575c7d42923c72c1d2bfac71a6d5440c",
+      "config_sha256": "sha256:ce98389abf483a7250bd96cccc766246894bd89a5c6c37de85379359876ae604",
+      "input_bundle_digest": "sha256:41c3c431bedd172f2e5158136c9dceb4fd95fac2e9837c5d089b1f55248cfea9",
+      "input_sha256": "sha256:b807ca57155083ac32e568578f5330a726a6ecf46d30aada6875fea4bbc3bec9",
+      "reference_manifest_sha256": "sha256:d81a3a9cf6af0be298d7e7599b3938c5d2b522096a6217cd9c10c52dc56fdb35",
+      "reference_sha256": "sha256:3af5497a7c9b507a9bd90e0470464c79e8d07e88113be09b9d476a0adbedd168",
+      "required_metrics": [
+        "M3"
+      ],
+      "scoring_masks_sha256": "sha256:f58732140038eaafe87637ec1d9a230435addac02f6648bb9f2f5b3c6bd6e7c1",
+      "seed": 306511
+    },
+    "H4": {
+      "authorization_sha256": "sha256:4b6e19f5744048fbb78e3b781144907f35c03f14ed06d524166612b47cb067a0",
+      "config_sha256": "sha256:c424568dc52db73bfa22e65df2ddabcf0e7799848d70b2399e17e0c6ca1f118d",
+      "input_bundle_digest": "sha256:c7133492d412b1e38129002f2560eda64ae3d089389311928e54cffba2fb62db",
+      "input_sha256": "sha256:9432583ae17d22bfde2988c81e6410c0505a2988c44a460032a457a4e5702b26",
+      "reference_manifest_sha256": "sha256:22445773e10a6ceb98654b052e4ea41eae219c4f6e8a8a97845309ebec6c921b",
+      "reference_sha256": "sha256:9ece9cb3efa9c13d941564cdb93e243cab6585ae8e427279c2bf32ae7ba0ce79",
+      "required_metrics": [
+        "M4"
+      ],
+      "scoring_masks_sha256": "sha256:cff1d1ee2b0df6bdf6c37fb4e0d273e0b9c60131f4cbfd11bf9e46daeab4090f",
+      "seed": 537233
+    },
+    "H5": {
+      "authorization_sha256": "sha256:18db070bc6956443e328722d4d7633086ce4a0c1d893c1492c7556bf9201c2c2",
+      "config_sha256": "sha256:a0efb2049942726f6619db96be40b910c165a4397c6856a0aa62e6897ac1c93a",
+      "input_bundle_digest": "sha256:5df5cc3775b9c60621ba8db1e2f1a7a29d3c25edfeafc7e755fd4997ff035d01",
+      "input_sha256": "sha256:b83ff021b20ae086e8f4cd503fecce769383fd53a63baa77026fcb402624941e",
+      "reference_manifest_sha256": "sha256:2c25252e549099ad318f2356f01b05f385eae8998690eb203b32d1dafd5bbcce",
+      "reference_sha256": "sha256:ef98d1ec8c88cac907a608b95049ed6456d6ee5bb2ca0aed55869b742f292dba",
+      "required_metrics": [
+        "M1",
+        "M2",
+        "M3",
+        "M4"
+      ],
+      "scoring_masks_sha256": "sha256:0b099fc1860a76b6848b0dc1edaa33d3078829f3dc70c333de81b6f4fd2a37c2",
+      "seed": 786433
+    }
+  },
+  "contract_version": "c-video-repair-contract@0.1",
+  "draft_revision": "R1-002",
+  "generator": "cvr-independent-synthetic-holdout@1",
+  "generator_sha256": "sha256:9994e06397306276c0e085f60bf9d67c45b553d0cec73e71d5f4701fcc9f379b",
+  "schema_version": "cvr-r1-002-holdout-seal@1"
+}

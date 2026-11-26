@@ -166,7 +166,7 @@ run 中的输入为只读快照，有明确的包内路径及摘要。参考目�
 | `before.mp4` / `after.mp4` | 单路 H.264、`yuv420p`、静音、faststart，尺寸为 profile 的宽高。 |
 | `comparison.mp4` | 同样编码，宽度 2 倍，画布内同一 PTS 左 before 右 after。禁止裁切、标签、边框或重定时。 |
 | 色彩和 PTS | RGB8 sRGB 码值转换为 BT.709 矩阵、有限范围 YCbCr；其 primaries 与输入 sRGB 一致，保留 sRGB transfer 并显式标记 `iec61966-2-1`。禁止给未转换的 sRGB 码值标 BT.709 transfer。每路从 0 按有理间隔展示，完全匹配 profile PTS、总帧数、时长。 |
-| 外部工具候选 | FFmpeg/libx264，`preset medium`、`crf 16`，固定 A 规格为 GOP 12，使用固定工具环境和显式 ffprobe/完整解码。用色条与暗阶验证标记、范围和解码 RGB。 |
+| 外部工具候选 | FFmpeg/libx264，`preset medium`、`crf 12`、GOP 12，使用固定工具环境和显式 ffprobe/完整解码。独立解码使用 `scale=in_color_matrix=bt709:in_range=tv:out_range=full,format=rgb24`，在冻结工具版本上固定重建行为。用色条与暗阶验证标记、范围和解码 RGB。 |
 
 B 候选 profile 的 MP4 尺寸为 640 × 360，`comparison.mp4` 为 1280 × 360；A 为 256 × 256 与 512 × 256。B 的源 SVG 由 resvg `0.44.0`（固定版本）光栅化为 RGB8 PNG 后进入 ingest/repair 链路，光栅化工具版本记录在 B 的来源证据中。
 
