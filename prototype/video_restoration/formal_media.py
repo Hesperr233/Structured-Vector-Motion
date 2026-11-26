@@ -364,7 +364,7 @@ def _encode(binary: str, path: Path, frames: np.ndarray, fps: Fraction) -> list[
         "-preset",
         "medium",
         "-crf",
-        "16",
+        "12",
         "-g",
         "12",
         "-keyint_min",
