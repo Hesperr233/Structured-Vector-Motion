@@ -10,7 +10,7 @@ permissions:
 env:
   CI_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   IMPLEMENTATION_SHA: 7ecdd3693dafc4410f6621765eea7153736fc9d2
-  CONTRACT_SHA: 497c08e1057ed1c1cbc6c5cc68af59c9404b4e90
+  CONTRACT_SHA: 4a90852501e5c58ab037d0cee23cbffd6ad90aee
 
 jobs:
   oracle:
