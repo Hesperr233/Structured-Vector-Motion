@@ -533,17 +533,18 @@ def inspect_case(args, clip, fixture, output, case, frozen):
         for role in ("E", "B", "G", "I", "contour", "ghost_truth")
     }
     if clip == "B5":
-        if frozen is not None:
-            declared = {
-                role: {
-                    "kind": description["kind"],
-                    "pixels": [record["pixel_sha256"] for record in description["files"]],
-                }
-                for role, description in offline["regions"].items()
+        declared = {
+            role: {
+                "kind": description["kind"],
+                "pixels": [record["pixel_sha256"] for record in description["files"]],
             }
+            for role, description in offline["regions"].items()
+        }
+        require(set(declared) == set(regions), "Unexpected Motion scoring region roles")
+        case["scoring_regions_sha256"] = canonical_digest(declared)
+        if frozen is not None:
             require(
-                set(declared) == set(regions)
-                and canonical_digest(declared) == frozen["motion"]["scoring_regions_sha256"],
+                case["scoring_regions_sha256"] == frozen["motion"]["scoring_regions_sha256"],
                 "Motion scoring areas differ from the approved region digests",
             )
         _, source_bytes = asset_record(
@@ -822,6 +823,9 @@ def run(args, report):
         frozen, seal_path, report["freeze_sha256"] = frozen_policy(args)
         report["holdout_seal_sha256"] = digest(seal_path.read_bytes())
         report["qualification"] = "FROZEN"
+        if args.policy_only:
+            report["overall"] = "PASS"
+            return
     else:
         require(args.holdout is None, "A holdout seal requires A-holdout or --require-frozen")
     report["tools"] = {
@@ -904,11 +908,16 @@ def main(argv=None):
     parser.add_argument("--profile", choices=CASES, required=True)
     parser.add_argument("--holdout", type=Path)
     parser.add_argument("--require-frozen", action="store_true")
+    parser.add_argument(
+        "--policy-only", action="store_true", help="check G1 before running fixtures"
+    )
     for name in ("ffmpeg", "ffprobe", "resvg"):
         parser.add_argument(f"--{name}", default=name)
     args = parser.parse_args(argv)
     if args.require_frozen and args.profile == "A-development":
         parser.error("--require-frozen is only supported for A-holdout and B")
+    if args.policy_only and args.profile != "A-holdout" and not args.require_frozen:
+        parser.error("--policy-only requires frozen qualification")
     args.candidate, args.contract, args.output = (
         path.resolve() for path in (args.candidate, args.contract, args.output)
     )
@@ -921,6 +930,7 @@ def main(argv=None):
     report = {
         "schema_version": "cvr-independent-staged-r1-002@1",
         "profile": args.profile,
+        "phase": "policy" if args.policy_only else "evidence",
         "qualification": "FROZEN_REQUIRED"
         if args.profile == "A-holdout" or args.require_frozen
         else "DEVELOPMENT",
@@ -947,7 +957,8 @@ def main(argv=None):
         report["overall"] = "CHANGES_REQUIRED"
         report["reason"] = str(exc)
     write_report(args.output / "report.json", report)
-    print(f"{args.profile}: {report['overall']}")
+    reason = f" ({report['reason']})" if "reason" in report else ""
+    print(f"{args.profile} {report['phase']}: {report['overall']}{reason}")
     return int(report["overall"] != "PASS")
 
 

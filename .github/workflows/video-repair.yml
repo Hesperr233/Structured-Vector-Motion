@@ -10,7 +10,7 @@ permissions:
 env:
   CI_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   IMPLEMENTATION_SHA: 7ecdd3693dafc4410f6621765eea7153736fc9d2
-  CONTRACT_SHA: b2e381fbc954de54d0f58fb25e11debb3579ade3
+  CONTRACT_SHA: 497c08e1057ed1c1cbc6c5cc68af59c9404b4e90
 
 jobs:
   oracle:
@@ -120,6 +120,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e "./implementation[dev,geometry,svg,trace,analysis]" "Pillow==12.3.0" "numpy==2.5.4"
+      - name: Validate written G1 approval and exact policy
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile A-holdout --policy-only --output video-gate/g1-policy
       - uses: ./.github/actions/c-video-tools
         id: tools
         with:
