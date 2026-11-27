@@ -18,6 +18,7 @@ PROFILES = {(24, 256, 256, 3): "A", (96, 360, 640, 3): "B"}
 MAE_LIMIT = 2.0
 PSNR_LIMIT = 40.0
 DURATION_TOLERANCE = Fraction(1, 100)
+RGB_DECODE_FILTER = "scale=in_color_matrix=bt709:in_range=tv:out_range=full,format=rgb24"
 COLOR = {
     "color_space": "bt709",
     "color_range": "tv",
@@ -243,7 +244,7 @@ def verify_media(
                     "-map",
                     "0:v:0",
                     "-vf",
-                    "scale=in_color_matrix=bt709:in_range=tv:out_range=full,format=rgb24",
+                    RGB_DECODE_FILTER,
                     "-fps_mode",
                     "passthrough",
                     "-frames:v",
