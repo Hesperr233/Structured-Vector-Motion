@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
-  "state": "DRAFT",
-  "approval": null,
+  "state": "FROZEN",
+  "approval": {
+    "approved_by": "Codex planning lane (delegated by repository user)",
+    "approved_at": "2026-11-27T13:43:40+08:00",
+    "decision": "APPROVE_G1",
+    "approved_proposal_commit": "497c08e1057ed1c1cbc6c5cc68af59c9404b4e90",
+    "holdout_seal_sha256": "sha256:3c3d6e7f4b0bbfa431e3c0c9c8beea631ac601a9358694fd9e8dcc39569911f0",
+    "policy_sha256": "sha256:bea69ee8b29333903e3b96b6033da00ce9ed1c07840deee060c14b9f54233b83"
+  },
   "contract_version": "c-video-repair-contract@0.1",
   "draft_revision": "R1-002",
   "contract_source_commit": "a1bd11519a2c3a58e5394ac729c42502c30c0050",

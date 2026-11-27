@@ -3,11 +3,11 @@
 | 项目 | 内容 |
 | --- | --- |
 | 版本 | `c-video-repair-contract@0.1`，草案修订 `R1-002` |
-| 状态 | **DRAFT**，交策划线 G1 审核。 |
+| 状态 | G1 **FROZEN**，批准记录和验收口径见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 | 适用范围 | C 板块 Core 外实验及 G0–G3 的分派。SVM 长期首要目标仍为 Motion 动画编辑。 |
 | 已验证事实 | 初始文档分支 `agent/c-docs-r1` 为 `5561d8b59fb1d3ebd5544bacde88f387d3902100`。实践原型位于 `agent/c-impl-r1` 的 `b310f57e6a21562798f5ccad2a1897ba4d99c47e`。 |
 | 待实现能力 | 按下列门禁完成正式 CLI、独立验收与 SVM Motion 演示。 |
-| 未决问题 | 见本页 [G1 待决问题](#g1-待决问题)。 |
+| 未决问题 | G2 正式 CI 与 G3 独立签收。 |
 
 仓库为 [Hesperr233/Structured-Vector-Motion](https://github.com/Hesperr233/Structured-Vector-Motion)。各线在独立 worktree/克隆核对实际分支、SHA、工作区状态。旧基线 `cf4815357909f4e462f26619d33e6bfcb1e16236` 仅供追踪。提交前核对真实上游，保留现有成果。集成时记录契约文档、实施和 CI 的各自 SHA。
 
@@ -53,7 +53,7 @@
 
 审查线查阅 AGENTS.md、README.md、[系统边界](../../spec/05-system-boundaries.md)、[Motion 语义](../../spec/21-motion-semantics.md)、[Motion 修订](../../spec/22-motion-revisions.md)、[受控光栅恢复](../../spec/58-explicit-multi-object-raster-recovery.md)，比对边界 diff、原片/真值隔离、源质量和候选 SHA，实看三路媒体与报告。使用 PASS / CHANGES_REQUIRED / BLOCKED 报告证据和阻断，不自行合并 main。
 
-## G1 待决问题
+## G1 冻结前的评审议题
 
 | 议题 | 草案决定或待验证 |
 | --- | --- |
@@ -63,21 +63,21 @@
 | 兼容期 | 确定保留原型调用方的期限以及显式迁移工具的归属。 |
 | 冻结记录 | 策划线确认公式修订、现有 30% 单项和 20% 组合及空间、运动、媒体门槛。开始留出后禁止下调阈值或重选区域。 |
 
-## G1 冻结记录（提案）
+## G1 冻结记录
 
-以下为 G1 冻结提案，全部保持 DRAFT，策划线书面批准后方可转为 FROZEN 并逐项填为最终值。
+策划线根据仓库用户在 Codex 中的书面委托，将 `497c08e1057ed1c1cbc6c5cc68af59c9404b4e90` 登记为 R1-002 冻结提案。下表与 [G1 记录](../c-video-repair/g1-freeze.json) 一起定义本轮正式验收。
 
-| 字段 | 提案值 |
+| 字段 | 冻结值 |
 | --- | --- |
 | 契约版本 | `c-video-repair-contract@0.1` |
-| 文档 SHA | 契约文本基于 `a1bd11519a2c3a58e5394ac729c42502c30c0050`，批准时另登记实际生效的文档提交。 |
+| 文档 SHA | 提案提交 `497c08e1057ed1c1cbc6c5cc68af59c9404b4e90` 与四份契约文件的准确摘要见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 | A Profile | 2 秒 / 24 帧 / 12/1 fps / 256 × 256 RGB8 PNG |
-| B Profile | 候选 8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 PNG / FINAL 非 stale / `SVGRenderer` / resvg `0.44.0`。独立只读 Document 的文件 SHA 与 12 ticks/s 下的连续 tick 0–95 见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
+| B Profile | 8 秒 / 96 帧 / 12/1 fps / 640 × 360 RGB8 PNG / FINAL 非 stale / `SVGRenderer` / resvg `0.44.0`。独立只读 Document 的文件 SHA 与 12 ticks/s 下的连续 tick 0–95 见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 | 指标公式 | M1–M4、Q1–Q10、T1–T7、X1–X15 的公式 ID（`cvr-metric-*@0.1-r1.002`）与定义见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
 | 阈值 | 单项改善 ≥ 30%、组合 ≥ 20%；Q/T/X/V 各护栏门槛见[验收标准](../c-video-repair/acceptance-criteria-v0.1.md) |
 | 留出数据 SHA | [H1–H5 封存清单](../c-video-repair/g1-holdout-seal.json)记录独立生成器、seed、输入、写入授权、配置、参考和评分掩膜的 SHA。 |
 | 工具版本 | Ubuntu 正式候选工具和 Windows 开发校准环境分别登记在 [G1 记录](../c-video-repair/g1-freeze.json)。 |
-| 策划批准 | 待策划线书面批准 |
+| 策划批准 | 已登记。具体审批范围、审批时间和冻结摘要见 [G1 记录](../c-video-repair/g1-freeze.json)。 |
 
 留出包可独立重建。在文档检出中使用含 NumPy 的 Python 运行下列命令。输出目录必须是新目录。生成器在发布目录前核对封存 SHA。每例的 `source/`、`masks/` 和 `config.json` 为修复输入。`reference/` 仅供离线评分。
 
@@ -87,7 +87,7 @@ python tools/video_repair_r1_holdout.py build --output build/r1-002-holdouts --s
 
 封存前仅核对输入下界、参考轮廓分割和包的读回，未运行任何 H 场景的修复。B 开发样例的候选轮廓规则 `cvr-b-authored-palette@1` 根据已知场景配色分别分割每帧修复 RGB，实测最小 IoU 为 0.99867，最大质心误差为 0.110 px。
 
-`g1-freeze.json` 当前记录 `DRAFT` 与空批准字段。G1 待策划线核对工具与开发证据后明示批准。通过后，`approval` 记录 `approved_by`、带时区的 `approved_at`、`decision` 为 `APPROVE_G1`、`holdout_seal_sha256` 及 `policy_sha256`，状态方可登记为 `FROZEN`。`policy_sha256` 是记录去掉 `state` 与 `approval` 后的规范 JSON 摘要，覆盖全部契约文件摘要、留出清单、B 来源与媒体工具。正式留出验收使用该冻结记录和所指向的封存清单。
+`g1-freeze.json` 的 `approval` 记录批准人、审批时间、提案提交、`holdout_seal_sha256` 与 `policy_sha256`。`policy_sha256` 是去掉 `state` 与 `approval` 后的规范 JSON 摘要，覆盖契约文件、留出清单、B 来源与工具。正式留出验收使用这份冻结记录及其封存清单。G2 与 G3 分别记录 CI 结果与签收。
 
 B 的评分区域摘要覆盖所有角色。每个角色记录掩膜的时序类型和按帧顺序排列的像素摘要。摘要使用规范 JSON，独立 CI 从实际评分的掩膜重算，以便更换实现 SHA 时仍可核对同一套评分区域。
 
