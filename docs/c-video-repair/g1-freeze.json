@@ -22,8 +22,8 @@
     "height": 360,
     "quality": "FINAL",
     "stale_frames": 0,
-    "input_bundle_digest": "sha256:15cbc982d33e7dfb55873d03f38e98fb52b2c61f53df8bf92017379a0504bb40",
-    "mask_manifest_sha256": "sha256:d6944c1b7e26a56703e9c43f63d3a4ec8353179217eca69cbf52e109572d12de",
+    "input_bundle_digest": "sha256:428992a655eca971520ba5f84e1486e948200773bf4e5e38ed9d34fed5175625",
+    "mask_manifest_sha256": "sha256:d97d24f2731c1886f1c8a5a2fa69fa9119ea64d6055fba5dd22697bab72ec78a",
     "config_sha256": "sha256:976bfc7443247bd2de10982a248776f8ff258747ae50ae01dc6bb3aa0c39c5ab",
     "scoring_regions_sha256": "sha256:9e4b50f9fa3e3b05f80375524e250d5bdab89ca42a9ada0043594341de5695c9",
     "segmentation": {

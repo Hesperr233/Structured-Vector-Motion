@@ -91,6 +91,8 @@ python tools/video_repair_r1_holdout.py build --output build/r1-002-holdouts --s
 
 B 的评分区域摘要覆盖所有角色。每个角色记录掩膜的时序类型和按帧顺序排列的像素摘要。摘要使用规范 JSON，独立 CI 从实际评分的掩膜重算，以便更换实现 SHA 时仍可核对同一套评分区域。
 
+B 的输入包与授权掩膜清单使用 Ubuntu 固定工具组实际重放的字节摘要。Windows 开发校准产生的包字节不同。独立 CI 仍逐帧重放同一 Document，并校验像素与评分区域摘要。[Ubuntu 开发证据](https://github.com/Hesperr233/Structured-Vector-Motion/actions/runs/45944429654/artifacts/15173978955)
+
 A 组合开发样例采用可测量的拖影强度后，原 CRF 16 在独立解码中最低为 39.972 dB。CRF 12 的同源逐帧重跑最低为 40.321 dB。提案采用 CRF 12，保留逐帧 MAE 与 PSNR 门槛，并登记解码换算方式。
 
 ## 仓库卫生与旧日志
