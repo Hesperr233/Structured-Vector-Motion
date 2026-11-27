@@ -1,0 +1,47 @@
+name: Video restoration experiment
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  fixture:
+    name: Video fixture and oracle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "Pillow==12.3.0"
+      - run: python -m unittest discover -s tests -p test_fixture.py -v
+
+  media:
+    name: Video codec round trip
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "Pillow==12.3.0"
+      - uses: ./.github/actions/c-video-tools
+      - name: Encode, probe and decode fixture
+        run: PYTHONPATH=tests python -m unittest video_restoration.media_smoke -v
+      - name: Preserve tool setup log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-restoration-codec-tool-log
+          path: tool-evidence/setup.log
+          if-no-files-found: warn
+          retention-days: 7

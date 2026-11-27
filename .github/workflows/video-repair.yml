@@ -1,0 +1,174 @@
+name: Video repair R1
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  IMPLEMENTATION_SHA: 7ecdd3693dafc4410f6621765eea7153736fc9d2
+  CONTRACT_SHA: 4a90852501e5c58ab037d0cee23cbffd6ad90aee
+
+jobs:
+  oracle:
+    name: Video scoring and fixture self-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CI_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "Pillow==12.3.0" "numpy==2.5.4"
+      - run: python -m unittest discover -s tests -p 'test_video_repair_*.py' -v
+      - run: python -m unittest discover -s tests -p test_fixture.py -v
+
+  compatibility:
+    name: R1-002 candidate A and B evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CI_SHA }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.IMPLEMENTATION_SHA }}
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CONTRACT_SHA }}
+          path: contract
+          persist-credentials: false
+      - name: Verify exact checkouts
+        run: |
+          test "$(git rev-parse HEAD)" = "$CI_SHA"
+          test "$(git -C implementation rev-parse HEAD)" = "$IMPLEMENTATION_SHA"
+          test "$(git -C contract rev-parse HEAD)" = "$CONTRACT_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e "./implementation[geometry,svg,trace,analysis]" "Pillow==12.3.0" "numpy==2.5.4"
+      - uses: ./.github/actions/c-video-tools
+        id: tools
+        with:
+          resvg: "true"
+      - name: Run retained prototype compatibility checks against the latest candidate
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: >-
+          python tests/test_video_repair_candidate.py --candidate implementation
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --output video-evidence/compatibility
+      - name: Independently check formal pipeline on A development fixtures
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile A-development --output video-evidence/development-a
+      - name: Independently check formal pipeline on B Motion demo
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile B --output video-evidence/development-b
+      - name: Preserve allowlisted evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-repair-r1-002-evidence
+          path: |
+            tool-evidence/setup.log
+            video-evidence/compatibility/compatibility.json
+            video-evidence/compatibility/*.mp4
+            video-evidence/development-*/report.json
+            video-evidence/development-*/*/*.log
+            video-evidence/development-*/**/run/run-manifest.json
+            video-evidence/development-*/**/run/metrics.json
+            video-evidence/development-*/**/run/*.mp4
+          if-no-files-found: error
+          retention-days: 7
+
+  acceptance:
+    name: Formal video repair acceptance
+    needs: [oracle, compatibility]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CI_SHA }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.IMPLEMENTATION_SHA }}
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CONTRACT_SHA }}
+          path: contract
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e "./implementation[dev,geometry,svg,trace,analysis]" "Pillow==12.3.0" "numpy==2.5.4"
+      - name: Validate written G1 approval and exact policy
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile A-holdout --policy-only --output video-gate/g1-policy
+      - uses: ./.github/actions/c-video-tools
+        id: tools
+        with:
+          resvg: "true"
+      - name: Check prerequisite jobs
+        env:
+          ORACLE_RESULT: ${{ needs.oracle.result }}
+          CANDIDATE_EVIDENCE_RESULT: ${{ needs.compatibility.result }}
+        run: test "$ORACLE_RESULT" = success && test "$CANDIDATE_EVIDENCE_RESULT" = success
+      - name: Run regression checks at the implementation SHA
+        id: regression
+        working-directory: implementation
+        run: |
+          test "$(git rev-parse HEAD)" = "$IMPLEMENTATION_SHA"
+          python -m ruff format --check .
+          python -m ruff check .
+          python -m pyright
+          python -m compileall -q svm tests prototype/video_restoration
+          python -m unittest discover -s tests -v
+          python -m unittest -v prototype.video_restoration.test_formal_fixture prototype.video_restoration.test_formal_media prototype.video_restoration.test_formal_pipeline
+      - name: Verify frozen A holdouts
+        if: ${{ !cancelled() && steps.regression.outcome == 'success' }}
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile A-holdout --output video-gate/holdout-a
+      - name: Verify frozen B Motion demo
+        if: ${{ !cancelled() && steps.regression.outcome == 'success' }}
+        run: >-
+          python tests/test_video_repair_r1_formal.py --candidate implementation --contract contract
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --expected-contract-sha "$CONTRACT_SHA"
+          --profile B --require-frozen --output video-gate/formal-b
+      - name: Preserve gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-repair-acceptance-status
+          path: |
+            tool-evidence/setup.log
+            video-gate/*/report.json
+            video-gate/*/*/*.log
+            video-gate/*/**/run/run-manifest.json
+            video-gate/*/**/run/metrics.json
+            video-gate/*/**/run/acceptance-report.json
+            video-gate/formal-b/**/run/*.mp4
+          if-no-files-found: error
+          retention-days: 7
