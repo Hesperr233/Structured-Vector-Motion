@@ -63,7 +63,9 @@ jobs:
           resvg: "true"
       - name: Run retained prototype compatibility checks against the latest candidate
         if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
-        run: python tests/test_video_repair_candidate.py --candidate implementation --output video-evidence/compatibility
+        run: >-
+          python tests/test_video_repair_candidate.py --candidate implementation
+          --expected-candidate-sha "$IMPLEMENTATION_SHA" --output video-evidence/compatibility
       - name: Independently check formal pipeline on A development fixtures
         if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
         run: >-

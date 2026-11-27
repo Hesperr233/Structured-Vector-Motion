@@ -149,16 +149,16 @@ def verify_media(run, report, before, after, ffmpeg, ffprobe):
     return results
 
 
-def compatibility(candidate, output, ffmpeg, ffprobe):
+def compatibility(candidate, output, ffmpeg, ffprobe, *, expected_candidate_sha=SHA):
     revision = tool_output("git", candidate, "rev-parse", "HEAD").decode().strip()
-    require(revision == SHA, "unexpected implementation SHA")
+    require(revision == expected_candidate_sha, "unexpected implementation SHA")
     require(not tool_output("git", candidate, "status", "--porcelain"), "dirty implementation tree")
     versions = {
         name: tool_output(binary, candidate, "-version").decode().splitlines()[0]
         for name, binary in (("ffmpeg", ffmpeg), ("ffprobe", ffprobe))
     }
     report = {
-        "implementation_sha": SHA,
+        "implementation_sha": revision,
         "contract": CONTRACT,
         "contract_docs_sha": CONTRACT_DOCS_SHA,
         "ci_sha": tool_output("git", Path(__file__).resolve().parent, "rev-parse", "HEAD")
@@ -368,6 +368,7 @@ def compatibility(candidate, output, ffmpeg, ffprobe):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--candidate", type=Path, required=True)
+    parser.add_argument("--expected-candidate-sha", default=SHA)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--ffmpeg", default="ffmpeg")
     parser.add_argument("--ffprobe", default="ffprobe")
@@ -375,18 +376,27 @@ if __name__ == "__main__":
     args.output.mkdir(parents=True, exist_ok=False)
     try:
         result = compatibility(
-            args.candidate.resolve(), args.output.resolve(), args.ffmpeg, args.ffprobe
+            args.candidate.resolve(),
+            args.output.resolve(),
+            args.ffmpeg,
+            args.ffprobe,
+            expected_candidate_sha=args.expected_candidate_sha,
         )
     except (ValueError, OSError, KeyError, subprocess.TimeoutExpired) as error:
         result = {
-            "implementation_sha": SHA,
+            "implementation_sha": args.expected_candidate_sha,
             "contract": CONTRACT,
             "contract_docs_sha": CONTRACT_DOCS_SHA,
             "ci_sha": tool_output("git", Path(__file__).resolve().parent, "rev-parse", "HEAD")
             .decode()
             .strip(),
             "gate": "BLOCKED",
-            "checks": {"setup": {"status": "FAIL", "diagnostic": type(error).__name__}},
+            "checks": {
+                "setup": {
+                    "status": "FAIL",
+                    "diagnostic": str(error) if type(error) is ValueError else type(error).__name__,
+                }
+            },
         }
     (args.output / "compatibility.json").write_text(
         json.dumps(result, indent=2) + "\n", encoding="utf-8"
